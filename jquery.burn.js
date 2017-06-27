@@ -6,7 +6,7 @@
  * http://sinetheta.github.com/burn/
  *
  */
-(function($) {
+(function ($) {
     var defaultSettings = {
         a: .3,
         k: .05,
@@ -52,24 +52,22 @@
         }]
     };
 
-    $.fn.burn = function(option, settings) {
-        var self;
+    $.fn.burn = function (option, settings) {
+        var self = this.data('_burn');
+        self && self.off();
 
         // check if user is setting/getting properties manually after plugin creation
-        if(option === false) {
-            self = this.data('_burn');
-            self && self.off();
-
+        if (option === false) {
             return this;
-        } else if(typeof option === 'object') {
+        } else if (typeof option === 'object') {
             settings = option;
-        } else if(typeof option == 'string') {
+        } else if (typeof option == 'string') {
             self = this.data('_burn');
             // this will check if plugin has already been initialized for this element
-            if(self) {
-                if(defaultSettings[option] !== undefined) {
-                    if(settings !== undefined) {
-                        if(option == 'title') {
+            if (self) {
+                if (defaultSettings[option] !== undefined) {
+                    if (settings !== undefined) {
+                        if (option == 'title') {
                             self.content.html(settings);
                         }
                         self.settings[option] = settings;
@@ -85,7 +83,7 @@
 
         settings = $.extend({}, defaultSettings, settings || {});
 
-        return this.each(function() {
+        return this.each(function () {
             var $settings = $.extend(true, {}, settings),
                 burning = new Burning($settings);
 
@@ -105,12 +103,12 @@
 
     Burning.prototype = {
 
-        ignite: function() {
+        ignite: function () {
             var self = this;
             var op = self.settings;
 
             // return the target in case its already been defined for the current element 
-            if(self.burning) return self.burning;
+            if (self.burning) return self.burning;
             self.oldShadow = self.elem.css('text-shadow');
             (function animloop() {
                 self.timer = window.requestAnimationFrame(animloop);
@@ -118,29 +116,29 @@
             })();
         },
 
-        wave: function(x, t, intensity) {
+        wave: function (x, t, intensity) {
             var op = this.settings;
 
             return intensity * op.a * Math.sin(op.k * x - op.w * t);
         },
 
-        burn: function() {
+        burn: function () {
             var self = this;
             var op = this.settings;
             var shadow;
 
-            shadow = $.map(op.flames, function(flame, i) {
+            shadow = $.map(op.flames, function (flame, i) {
                 var rise = -flame.y;
                 var intensity = Math.sqrt(Math.random());
 
                 flame.x = self.wave(flame.y, Date.now() / 1000, intensity);
 
-                return(flame.x + op.wind) * flame.y * op.strength * op.diffusion + 'em ' + rise * op.strength * op.diffusion + 'em ' + flame.blur * op.strength * op.diffusion + 'em hsla(' + flame.hsla[0] + ', ' + flame.hsla[1] + '%, ' + flame.hsla[2] + '%, ' + flame.hsla[3] + ')';
+                return (flame.x + op.wind) * flame.y * op.strength * op.diffusion + 'em ' + rise * op.strength * op.diffusion + 'em ' + flame.blur * op.strength * op.diffusion + 'em hsla(' + flame.hsla[0] + ', ' + flame.hsla[1] + '%, ' + flame.hsla[2] + '%, ' + flame.hsla[3] + ')';
             });
             self.elem.css('text-shadow', shadow.join(', '));
         },
 
-        off: function() {
+        off: function () {
             window.cancelAnimationFrame(this.timer);
             this.timer = null;
             this.elem.css('text-shadow', this.oldShadow);
@@ -152,25 +150,33 @@
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 // requestAnimationFrame polyfill by Erik Möller
 // fixes from Paul Irish and Tino Zijdel
-(function() {
+(function () {
     var lastTime = 0;
     var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
         window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
         window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
     }
 
-    if(!window.requestAnimationFrame) window.requestAnimationFrame = function(callback, element) {
+    if (!window.requestAnimationFrame) window.requestAnimationFrame = function (callback, element) {
         var currTime = new Date().getTime();
         var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-        var id = window.setTimeout(function() {
+        var id = window.setTimeout(function () {
             callback(currTime + timeToCall);
         }, timeToCall);
         lastTime = currTime + timeToCall;
         return id;
     };
 
-    if(!window.cancelAnimationFrame) window.cancelAnimationFrame = function(id) {
+    if (!window.cancelAnimationFrame) window.cancelAnimationFrame = function (id) {
         clearTimeout(id);
     };
 }());
+
+jQuery.fn.burnMe = function (millisecond) {
+    var tag = this;
+    this.burn();
+    setTimeout(function () {
+        $(tag).burn(false);
+    }, millisecond);
+}
